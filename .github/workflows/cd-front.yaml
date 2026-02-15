@@ -1,50 +1,24 @@
-# Sample workflow to access AWS resources when workflow is tied to branch
-# The workflow Creates static website using aws s3
-name: front deploy on AWS
+name: Deploy to Cloudflare Pages
 on:
   push:
-    tags:
-      - front*
-    branches:
-      - main
-env:
-  BUCKET_NAME: "kenmiki.com"
-  AWS_REGION: "ap-northeast-1"
-# permission can be added at job level or workflow level
+    branches: [main]
 permissions:
-  id-token: write # This is required for requesting the JWT
-  contents: read # This is required for actions/checkout
+  contents: read
 jobs:
-  S3PackageUpload:
+  deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Git clone the repository
-        uses: actions/checkout@v3
-      - name: Setup node
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 20
           cache: npm
-      - uses: actions/cache@v3
-        id: node_modules_cache_id
-        env:
-          cache-name: cache-node-modules
+      - run: cd front && npm ci
+      - run: cd front && npm run build
+      - uses: cloudflare/wrangler-action@v3
         with:
-          path: "**/node_modules"
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-      - name: package install
-        if: ${{ steps.node_modules_cache_id.outputs.cache-hit != 'true' }}
-        run: cd front && npm ci
-      - name: build
-        run: cd front && npm run build
-      - name: configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: arn:aws:iam::200966924140:role/oidc-github
-          role-session-name: samplerolesession
-          aws-region: ${{ env.AWS_REGION }}
-      # Upload a file to AWS s3
-      - name: upload to s3
-        run: |
-          cd front && aws s3 sync dist s3://${{ env.BUCKET_NAME }}/ --cache-control="no-cache, max-age=0" --delete
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=wedding-kenmiki
+          workingDirectory: front
