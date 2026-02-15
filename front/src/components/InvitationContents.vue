@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import type { Schedule } from '@/components/schedule'
 import CarouselCard from './CarouselCard.vue'
 import MessageCard from './MessageCard.vue'
@@ -10,9 +11,41 @@ import img1 from '@/assets/koma01.jpg'
 import img2 from '@/assets/koma02.jpg'
 import img3 from '@/assets/koma03.jpg'
 import topVideo from '@/assets/top.MOV'
+import { loadInvitationAssets } from '@/services/invitation-assets'
 
-const middleImages = [img1, img2, img3]
-const heroVideoSrc = topVideo
+const staticImages = [img1, img2, img3]
+const middleImages = ref([...staticImages])
+const heroVideoSrc = ref(topVideo)
+
+onMounted(async () => {
+  try {
+    const assets = await loadInvitationAssets()
+    if (assets.heroVideo) {
+      heroVideoSrc.value = assets.heroVideo
+    }
+    for (let i = 0; i < assets.carousel.length; i++) {
+      if (assets.carousel[i]) {
+        middleImages.value[i] = assets.carousel[i]!
+      }
+    }
+  } catch {
+    // Fallback to static assets silently
+  }
+})
+
+const videoRef = ref<HTMLVideoElement | null>(null)
+const isPlaying = ref(false)
+
+const handlePlay = async () => {
+  if (!videoRef.value) return
+  try {
+    videoRef.value.muted = false
+    await videoRef.value.play()
+    isPlaying.value = true
+  } catch (error) {
+    console.error('動画の再生に失敗しました', error)
+  }
+}
 
 const props = defineProps({
   schedule: {
@@ -29,19 +62,23 @@ const props = defineProps({
 <template>
   <v-card class="pa-4">
     <v-row>
-      <v-col cols="12" lg="6" md="6" sm="12" xs="12">
-        <v-responsive aspect-ratio="16/9" class="rounded-lg overflow-hidden elevation-1">
+      <v-col cols="12" lg="12" md="12" sm="12" xs="12">
+        <v-responsive
+          aspect-ratio="16/9"
+          class="rounded-lg overflow-hidden elevation-1 position-relative"
+        >
           <video
+            ref="videoRef"
             :src="heroVideoSrc"
-            autoplay
-            muted
             loop
             playsinline
-            style="width: 100%; height: 100%; object-fit: cover"
+            class="w-100 h-100"
+            style="object-fit: cover"
+            controls
           />
         </v-responsive>
       </v-col>
-      <v-col cols="12" lg="6" md="6" sm="12" xs="12">
+      <v-col cols="12" lg="12" md="12" sm="12" xs="12">
         <MessageCard />
       </v-col>
     </v-row>
@@ -55,4 +92,16 @@ const props = defineProps({
   </v-card>
 </template>
 
-<style scoped></style>
+<style scoped>
+.position-relative {
+  position: relative;
+}
+
+.play-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+</style>

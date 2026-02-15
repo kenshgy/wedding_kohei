@@ -5,6 +5,7 @@ import { reception, scheduleAll, koheiSchedule } from '@/components/schedule'
 import {LOCATION_CEREMONY, LOCATION_RECEPTION} from '@/components/locations'
 import UploadView from '@/views/UploadView.vue'
 import AlbumView from "@/views/AlbumView.vue"
+import AdminView from '@/views/AdminView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -12,7 +13,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'index',
-      component: IndexView,
+      component: InvitatioinView,
       meta: {title: "Ken&Miki Wedding"}
     },    
     {
@@ -47,6 +48,12 @@ const router = createRouter({
       name: 'album',
       component: AlbumView,
       meta: {title: "Ken&Miki Wedding"}
+    },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: AdminView,
+      meta: {title: "Ken&Miki Wedding - Admin"}
     },
   ]
 })

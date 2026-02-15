@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 
-const target = new Date(2023, 10, 26, 17, 40).getTime()
+const target = new Date(2026, 4, 16, 12, 0o0).getTime()
 const count = reactive({
   date: 0,
   hour: 0,
@@ -82,7 +82,6 @@ startCountDown()
 
   font-size: 20px;
 }
-
 
 .count_down-bg {
   background: url('@/assets/count-down.jpg');

@@ -42,8 +42,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import getSignedUrl from '@/services/get-signedUrl'
-import putS3 from '@/services/put-s3'
+import fileUploadService from '@/services/get-signedUrl'
 
 const selectedFile = ref<File | null>(null)
 const imagePreview = ref<string | ArrayBuffer | null>('')
@@ -55,34 +54,18 @@ function handleFileUpload(event: Event) {
   if (target.files && target.files.length > 0) {
     selectedFile.value = target.files[0]
     const reader = new FileReader()
-    console.log(selectedFile.value?.type)
 
     reader.onload = () => {
-      // ファイルの読み込みが完了したら、プレビューを表示する
       imagePreview.value = reader.result
     }
-    // 画像ファイルを読み込む
     reader.readAsDataURL(target.files[0])
   }
 }
 
-async function createPresignedUrlWithClient() {
-  const fileType = selectedFile.value?.type
-  return await getSignedUrl.get(fileType as string)
-}
-
-async function put(url: string | URL, data: any) {
-  await putS3.put(url, data)
-}
-
 async function uploadFile() {
   try {
-    const response = await createPresignedUrlWithClient()
-
-    console.log('Calling PUT using presigned URL with client')
-    await put(response.uploadURL, selectedFile.value)
+    await fileUploadService.upload(selectedFile.value as File)
     uploadSuccess.value = true
-    console.log('\nDone. Check your S3 console.')
   } catch (err) {
     console.error(err)
   }

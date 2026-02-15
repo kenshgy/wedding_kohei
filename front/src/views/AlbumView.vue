@@ -16,7 +16,7 @@
       align-self="center"
     >
       <v-img
-        :src="`https://kenmiki-wedding-photo.s3.amazonaws.com/` + j.name"
+        :src="'/api/photos/' + encodeURIComponent(j.name)"
         class="mb-4 mx-2"
         :alt="j.name"
       />
@@ -55,8 +55,7 @@ interface PhotoInfo {
 let imageList = ref<PhotoInfo[]>([])
 
 function parseDate(dateString: string) {
-  const [year, month, day, hour, minute, second] = dateString.split(/\/|:|\s/).map(Number)
-  return new Date(year, month - 1, day, hour, minute, second)
+  return new Date(dateString)
 }
 
 async function getPhotoList(startAfter: string) {
